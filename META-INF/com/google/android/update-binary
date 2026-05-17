@@ -29,7 +29,7 @@ for i in $(seq 1 28); do ui_print " "; done
 ui_print "____________________________________________________"
 ui_print " "
 ui_print "Disable File Encryption for Metadata / FBE v2"
-ui_print "Version 1.0"
+ui_print "Version 1.1"
 ui_print "by Lyinceer XDA ||  @zwran on Telegram"
 ui_print "Modified for s5e8835 by hajs0208"
 sleep 2
