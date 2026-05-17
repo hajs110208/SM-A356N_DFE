@@ -39,6 +39,7 @@ ui_print " "
 ui_print "____________________________________________________"
 ui_print " "
 sleep 3
+set_progress(0.000000);
 BOARD_NAME=$(getprop ro.product.board)
 if [ "$BOARD_NAME" != "s5e8835" ]; then
   ui_print "[-] This zip is only for s5e8835 devices."
@@ -47,6 +48,7 @@ if [ "$BOARD_NAME" != "s5e8835" ]; then
 fi
 
 # Check if internal storage is accessible
+set_progress(0.050000);
 if [ ! -d "/data/media" ]; then
   ui_print "[*] Storage is encrypted or missing!"
   sleep 1
@@ -122,9 +124,12 @@ if [ ! -d "/data/media" ]; then
   # Final action based on selection
   if [ "$SELECTION" = "yes" ]; then
     ui_print "[*] Continuing with data format to fix Internal Storage temporarily..."
+    set_progress(0.080000);
     umount /data 2>/dev/null
 	sleep 5
+	set_progress(0.100000);
     make_f2fs -f /dev/block/by-name/userdata
+    set_progress(0.200000);
 	sleep 5
     mount /data || {
       ui_print "[-] Failed to mount /data! Please format via Wipe > Format Data and Reboot back to Recovery!"
@@ -133,7 +138,7 @@ if [ ! -d "/data/media" ]; then
     ui_print "[*] /data has been formatted as F2FS."
   else
     ui_print "[!] User chose not to format. Exiting..."
-    exit 1
+    set_progress(1.000000);
   fi
 fi
 
@@ -163,10 +168,12 @@ SUPER_BLK="/dev/block/by-name/super"
 
 # Copy & unpack super
 ui_print "[+] Preparing setup..."
+set_progress(0.250000);
 
 if [ -b "$SUPER_BLK" ]; then
   if dd if="$SUPER_BLK" of="$WORKDIR/super.img" bs=1M status=none; then
     ui_print "[+] super.img copied successfully."
+    set_progress(0.400000);
   else
     ui_print "[-] Failed to copy from $SUPER_BLK with dd."
     exit 1
@@ -177,6 +184,7 @@ else
 fi
 
 ui_print "[+] Unpacking..."
+set_progress(0.410000);
 "$TOOLS/lpunpack" "$WORKDIR/super.img" "$LPUNPACK_DIR" >/dev/null 2>&1 \
   || { ui_print "[-] lpunpack failed"; exit 1; }
 
@@ -185,9 +193,11 @@ sleep 4
 rm -f "$WORKDIR/super.img"
 
 # Rename vendor_a to vendor to avoid fs_config errors!
+set_progress(0.470000);
 cp "$LPUNPACK_DIR/vendor_${SLOT}.img" "$LPUNPACK_DIR/vendor.img"
 
 # Extract vendor
+set_progress(0.490000);
 VENDOR_IMG="$LPUNPACK_DIR/vendor.img"
 [ -f "$VENDOR_IMG" ] || { ui_print "[-] $VENDOR_IMG not found"; exit 1; }
 ui_print "    vendor is EROFS. Pfftt..."
@@ -195,13 +205,14 @@ ui_print "  "
 sleep 3
 ui_print "[+] Preparing EROFS tools for vendor"
 sleep 4
+set_progress(0.500000);
 ui_print "[+] Extracting vendor..."
 rm -rf "$UNPACK_DIR" && mkdir -p "$UNPACK_DIR"
 "$TOOLS/extract.erofs64" -i "$VENDOR_IMG" -x -f -o "$UNPACK_DIR" >/dev/null 2>&1 \
   || { ui_print "[-] extract.erofs64 failed"; exit 1; }
 
 sleep 2
-
+set_progress(0.540000);
 # Patch fstab
 # Try to locate fstab under correct vendor slot
 FSTAB=$(find "$UNPACK_DIR/vendor/" -type f -name "fstab.s5e8835" | head -n1)
@@ -210,7 +221,7 @@ FSTAB=$(find "$UNPACK_DIR/vendor/" -type f -name "fstab.s5e8835" | head -n1)
 
 ui_print "[+] Found fstab: /vendor/etc/fstab.s5e8835"
 ui_print "[+] Patching fstab..."
-
+set_progress(0.600000);
 $BUSYBOX sed -i \
   -e 's#^/dev/block/by-name/metadata.*#/dev/block/by-name/metadata\t/metadata\tf2fs\tnoatime,nosuid,nodev,discard,sync,fsync_mode=strict,data_flush\twait,formattable,first_stage_mount,check#' \
   -e 's#^/dev/block/by-name/userdata.*#/dev/block/by-name/userdata\t/data\tf2fs\tnoatime,nosuid,nodev,discard,usrquota,grpquota,fsync_mode=nobarrier,reserve_root=32768,resgid=5678\tlatemount,wait,check,quota,checkpoint=fs,reservedsize=128M,fscompress#' \
@@ -221,6 +232,7 @@ ui_print "[+] fstab patched successfully."
 sleep 2
 
 # Repack vendor
+set_progress(0.650000);
 ui_print "[+] Repacking vendor..."
 ui_print "  "
 FS_OPTIONS_FILE=$(find "$UNPACK_DIR/config" -name "vendor_fs_options" | head -n1)
@@ -235,7 +247,7 @@ FS_CONFIG="$UNPACK_DIR/config/vendor_fs_config"
 FILE_CONTEXTS="$UNPACK_DIR/config/vendor_file_contexts"
 [ -f "$FS_CONFIG" ] || { ui_print "[-] vendor_fs_config not found"; exit 1; }
 [ -f "$FILE_CONTEXTS" ] || { ui_print "[-] vendor_file_contexts not found"; exit 1; }
-
+set_progress(0.690000);
 # Run mkfs.erofs using extracted UUID and timestamp
 "$TOOLS/mkfs.erofs" \
   --mount-point=vendor \
@@ -247,13 +259,13 @@ FILE_CONTEXTS="$UNPACK_DIR/config/vendor_file_contexts"
   "$WORKDIR/vendor_mod.img" \
   "$UNPACK_DIR/vendor" >/dev/null 2>&1 \
   || { ui_print "[-] mkfs.erofs failed"; exit 1; }
-
+set_progress(0.700000);
 rm "$LPUNPACK_DIR/vendor.img"
 cp -f "$WORKDIR/vendor_mod.img" "$LPUNPACK_DIR/vendor_${SLOT}.img" || {
   ui_print "[-] Failed to copy patched vendor_${SLOT}.img"
   exit 1
 }
-
+set_progress(0.740000);
 ui_print "[DEBUG] Verifying patched vendor.img…"
 $TOOLS/extract.erofs64 -i "$LPUNPACK_DIR/vendor_${SLOT}.img" -x -o /data/local/tmp/verify_vendor
 
@@ -278,7 +290,7 @@ METADATA_SLOTS=$("$TOOLS/lpdump" "$SUPER_BLK" | awk '/Metadata slot count/ {prin
 ui_print "[+] Calculating partition layout..."
 /data/local/tmp/dfework/tools/gen_lpmake_args.sh /data/local/tmp/lpunpack /dev/block/by-name/super > /tmp/lpmargs.txt
 LPMARGS=$(cat /tmp/lpmargs.txt)
-
+set_progress(0.760000);
 ui_print "[*] Dumping LPMARGS..."
 echo "$LPMARGS" > /tmp/final_lpmargs_debug.txt
 
@@ -290,7 +302,7 @@ SUPER_SIZE=$("$TOOLS/busybox" blockdev --getsize64 "$SUPER_BLK")
 #SUPER_SIZE=$(awk -v size="$SUPER_SIZE" 'BEGIN { print int(size / 4096) * 4096 }')
 
 ls -l "$LPUNPACK_DIR/vendor_${SLOT}.img"
-
+set_progress(0.800000);
 # Calls LPMAKE
 ui_print "[*] Running lpmake..."
 $TOOLS/lpmake \
@@ -309,9 +321,10 @@ if [ $? -ne 0 ]; then
 fi
 
 sleep 2
-
+set_progress(0.8500000);
 # Flash super
 ui_print "[+] Flashing back things..."
+set_progress(0.870000);
 dd if="$WORKDIR/super_repacked.img" of="$SUPER_BLK" bs=1M || {
   ui_print "[-] Flash failed"; exit 1;
 }
@@ -319,7 +332,7 @@ sync
 
 sleep 2
 ui_print "  "
-
+set_progress(0.900000);
 # Debug: Verify patched vendor in live super
 ui_print "[DEBUG] Verifying if live super contains patched vendor..."
 rm -rf "$WORKDIR/postflash_live"
@@ -328,7 +341,7 @@ mkdir -p "$WORKDIR/postflash_live"
 "$TOOLS/extract.erofs64" -i /data/local/tmp/postflash_live/vendor_${SLOT}.img -x -o /data/local/tmp/postflash_live/vendor
 
 ui_print "  "
-
+set_progress(0.950000);
 FSTAB_PATH="/data/local/tmp/postflash_live/vendor/vendor_${SLOT}/etc/fstab.s5e8835"
 if [ -f "$FSTAB_PATH" ]; then
   if grep -q "inlinecrypt" "$FSTAB_PATH"; then
@@ -343,10 +356,11 @@ fi
 # Cleanup files
 rm -rf "$WORKDIR"
 rm -rf "$TMP"
-
+set_progress(0.970000);
 # Create media back
 mkdir -p /data/media
 
 ui_print "[!] Decryption patch applied successfully!"
 sleep 3
 ui_print "[!] Please FORMAT /data before rebooting."
+set_progress(1.000000);
