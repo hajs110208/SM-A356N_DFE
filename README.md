@@ -1,15 +1,16 @@
-# Galaxy A55 Disable Force Encryption
-## Disable File Encryption (DFE) for s5e8845 (Exynos 1480)
-This is a custom recovery-flashable script designed to disable file-based encryption (FBE v2) on Samsung device with the s5e8845 SoC. This fix "0 MB internal storage" issues, and decrypts /data.
+# Galaxy A35 Disable Force Encryption
+## Disable File Encryption (DFE) for s5e8835 (Exynos 1380)
+This is a custom recovery-flashable script designed to disable file-based encryption (FBE v2) on Samsung device with the s5e8835 SoC. This fix "0 MB internal storage" issues, and removes /data encryption.
 
 ## Use with caution.
-! Haven't test on slot _b , but it'll probably work.
-## Supported Device
-- Samsung Galaxy A55 5G
+I haven't tested on Galaxy M33 5G. but it will probably work.
 
+## Supported Device
+- Samsung Galaxy A35 5G
+- Samsung Galaxy M33 5G
 ## Installation
 1. Boot into custom recovery
-2. Copy SM-A556E_DFE.zip to your device. Recommended path is on '/tmp'
+2. Copy SM-A356N_DFE.zip to your device. Recommended path is on '/tmp'
 3. Install as zip
 4. Format /data when prompted (required to fully disable encryption).
 5. Reboot to system.
