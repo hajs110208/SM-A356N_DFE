@@ -1,1 +1,1 @@
-ui_print("Starting Decryption Module...");
+ui_print("This won't work as a magisk module. Please flash this file on TWRP to use.");
