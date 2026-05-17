@@ -31,6 +31,7 @@ ui_print " "
 ui_print "Disable File Encryption for Metadata / FBE v2"
 ui_print "Version 1.5"
 ui_print "by Lyinceer XDA ||  @zwran on Telegram"
+ui_print "Modified for s5e8835 by hajs0208"
 sleep 2
 ui_print " "
 ui_print "If you encounter bugs or issues, report them!"
@@ -51,7 +52,7 @@ if [ ! -d "/data/media" ]; then
   sleep 1
   ui_print "[*] Internal storage currently appears as 0MB."
   sleep 3
-  ui_print "[*] Need at least free space of ~14GB."
+  ui_print "[*] Need at least free space of ~15GB."
   sleep 5
   ui_print "[*] Do you want to FORMAT /data?"
   sleep 3
