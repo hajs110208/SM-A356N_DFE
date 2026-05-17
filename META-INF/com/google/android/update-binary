@@ -38,6 +38,12 @@ ui_print " "
 ui_print "____________________________________________________"
 ui_print " "
 sleep 3
+BOARD_NAME=$(getprop ro.product.board)
+if [ "$BOARD_NAME" != "s5e8835" ]; then
+  ui_print "[-] This zip is only for s5e8835 devices."
+  ui_print "[-] Your device soc: $BOARD_NAME"
+  exit 1
+fi
 
 # Check if internal storage is accessible
 if [ ! -d "/data/media" ]; then
@@ -47,7 +53,7 @@ if [ ! -d "/data/media" ]; then
   sleep 3
   ui_print "[*] Need at least free space of ~14GB."
   sleep 5
-  ui_print "[*] Do you want to FORMAT /data and decrypt?"
+  ui_print "[*] Do you want to FORMAT /data?"
   sleep 3
   ui_print "[*] Use Volume UP to change selection, Volume DOWN to select."
   ui_print "[*] Your choice:"
@@ -125,7 +131,7 @@ if [ ! -d "/data/media" ]; then
     }
     ui_print "[*] /data has been formatted as F2FS."
   else
-    ui_print "[!] User chose not to decrypt. Exiting..."
+    ui_print "[!] User chose not to format. Exiting..."
     exit 1
   fi
 fi
@@ -144,27 +150,12 @@ done
 
 # Device check
 BOARD_NAME=$(getprop ro.product.board)
-if [ "$BOARD_NAME" != "s5e8845" ]; then
-  ui_print "[-] This zip is only for s5e8845 devices."
-  ui_print "[-] Your device soc: $BOARD_NAME"
-  exit 1
-fi
+if [ "$BOARD_NAME" != "s5e8835" ]; then
+  ui_print "[-] 
 
 sleep 8
 
-# Detect active slot
-ui_print "[+] Detecting active slot..."
-SLOT=$("$TOOLS/detect_slot.sh") || {
-  ui_print "[-] Failed to detect active slot"
-  exit 1
-}
-
-sleep 2
-
-SLOT_UPPER=$(echo "$SLOT" | tr 'a-z' 'A-Z')
-ui_print "    Active slot: $SLOT_UPPER"
-
-VENDOR_BLK="/dev/block/mapper/vendor_$SLOT"
+VENDOR_BLK="/dev/block/mapper/vendor"
 SUPER_BLK="/dev/block/by-name/super"
 [ -b "$VENDOR_BLK" ] || { ui_print "[-] Missing $VENDOR_BLK"; exit 1; }
 [ -b "$SUPER_BLK" ] || { ui_print "[-] Missing $SUPER_BLK"; exit 1; }
@@ -212,11 +203,11 @@ sleep 2
 
 # Patch fstab
 # Try to locate fstab under correct vendor slot
-FSTAB=$(find "$UNPACK_DIR/vendor/" -type f -name "fstab.s5e8845" | head -n1)
+FSTAB=$(find "$UNPACK_DIR/vendor/" -type f -name "fstab.s5e8835" | head -n1)
 # Check if found
-[ -f "$FSTAB" ] || { ui_print "[-] fstab not found in vendor_$SLOT"; exit 1; }
+[ -f "$FSTAB" ] || { ui_print "[-] fstab not found in vendor"; exit 1; }
 
-ui_print "[+] Found fstab: /vendor/etc/fstab.s5e8845"
+ui_print "[+] Found fstab: /vendor/etc/fstab.s5e8835"
 ui_print "[+] Patching fstab..."
 
 $BUSYBOX sed -i \
@@ -265,7 +256,7 @@ cp -f "$WORKDIR/vendor_mod.img" "$LPUNPACK_DIR/vendor_${SLOT}.img" || {
 ui_print "[DEBUG] Verifying patched vendor.img…"
 $TOOLS/extract.erofs64 -i "$LPUNPACK_DIR/vendor_${SLOT}.img" -x -o /data/local/tmp/verify_vendor
 
-FSTAB_LOC=$(find /data/local/tmp/verify_vendor -type f -name "fstab.s5e8845" | head -n1)
+FSTAB_LOC=$(find /data/local/tmp/verify_vendor -type f -name "fstab.s5e8835" | head -n1)
 if [ -f "$FSTAB_LOC" ]; then
   if grep -q "inlinecrypt" "$FSTAB_LOC"; then
     ui_print "[DEBUG] ERROR: Patched fstab MISSING expected patch"
@@ -273,7 +264,7 @@ if [ -f "$FSTAB_LOC" ]; then
     ui_print "[DEBUG] Patched fstab present in $(basename "$FSTAB_LOC")"
   fi
 else
-  ui_print "[DEBUG] ERROR: fstab.s5e8845 not found after unpacking vendor_${SLOT}.img"
+  ui_print "[DEBUG] ERROR: fstab.s5e8835 not found after unpacking vendor.img"
 fi
 
 ui_print "  "
@@ -337,7 +328,7 @@ mkdir -p "$WORKDIR/postflash_live"
 
 ui_print "  "
 
-FSTAB_PATH="/data/local/tmp/postflash_live/vendor/vendor_${SLOT}/etc/fstab.s5e8845"
+FSTAB_PATH="/data/local/tmp/postflash_live/vendor/vendor_${SLOT}/etc/fstab.s5e8835"
 if [ -f "$FSTAB_PATH" ]; then
   if grep -q "inlinecrypt" "$FSTAB_PATH"; then
     ui_print "[-] [FAIL] Live fstab still has encryption flags!"
@@ -345,7 +336,7 @@ if [ -f "$FSTAB_PATH" ]; then
     ui_print "[*] [PASS] Live fstab patch is present."
   fi
 else
-  ui_print "[-] fstab.s5e8845 not found in live vendor!"
+  ui_print "[-] fstab.s5e8835 not found in live vendor!"
 fi
 
 # Cleanup files
@@ -358,4 +349,3 @@ mkdir -p /data/media
 ui_print "[!] Decryption patch applied successfully!"
 sleep 3
 ui_print "[!] Please FORMAT /data before rebooting."
-exit 0
