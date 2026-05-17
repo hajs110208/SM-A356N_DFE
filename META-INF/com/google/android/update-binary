@@ -1,7 +1,3 @@
-#!/sbin/sh
-#
-# update-binary (recovery sh)
-
 API=$1
 OUTFD=$2
 ZIPFILE=$3
