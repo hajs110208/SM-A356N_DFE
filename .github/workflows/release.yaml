@@ -1,4 +1,4 @@
-name: Zip and Release SM-A556E_DFE
+name: release zip
 
 on:
   workflow_dispatch:
@@ -10,33 +10,27 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
-    env:
-      DEVICE: A556E
-      VERSION: "1.5"
-      ONEUI: "One UI 7"
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Create ZIP archive
         run: |
-          zip -r SM-${{ env.DEVICE }}_DFE_v${{ env.VERSION }}.zip . -x "README.md" "LICENSE" ".git/*" ".github/*"
+          zip -r SM-A356N_DFE.zip . -x "README.md" "LICENSE" ".git/*" ".github/*"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v${{ env.VERSION }}"
-          name: "DFE v${{ env.VERSION }} for SM-${{ env.DEVICE }}"
+          tag_name: "v1.0"
+          name: "DFE v1.0 for SM-A356N"
           body: |
-            Device: SM-${{ env.DEVICE }}
-            Version: ${{ env.VERSION }}
-            OS: ${{ env.ONEUI }}
+            Device: SM-A356N
+            Version: v1.0
 
             Based on recovery zip flash method.
 
             Be sure to format /data after flashing this!
             If you encounter "Unmounting /data..." errors, reboot to recovery and try again.
-          files: SM-${{ env.DEVICE }}_DFE_v${{ env.VERSION }}.zip
+          files: SM-A356N_DFE_v1.0.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
