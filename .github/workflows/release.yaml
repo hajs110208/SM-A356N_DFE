@@ -2,6 +2,11 @@ name: release zip
 
 on:
   workflow_dispatch:
+   inputs:
+      release_tag:
+        description: 'Release tag'
+        default: 'v1.0'
+        required: true
 
 permissions:
   contents: write
@@ -16,21 +21,21 @@ jobs:
 
       - name: Create ZIP archive
         run: |
-          zip -r SM-A356N_DFE.zip . -x "README.md" "LICENSE" ".git/*" ".github/*"
+          zip -r SM-A356N_DFE_${{ inputs.release_tag }}.zip . -x "README.md" "LICENSE" ".git/*" ".github/*"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.0"
-          name: "DFE v1.0 for SM-A356N"
+          tag_name: ${{ inputs.release_tag }}
+          name: "DFE ${{ inputs.release_tag }} for SM-A356N"
           body: |
             Device: SM-A356N
-            Version: v1.0
+            Version: ${{ inputs.release_tag }}
 
             Based on recovery zip flash method.
 
             Be sure to format /data after flashing this!
             If you encounter "Unmounting /data..." errors, reboot to recovery and try again.
-          files: SM-A356N_DFE_v1.0.zip
+          files: SM-A356N_DFE_${{ inputs.release_tag }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
