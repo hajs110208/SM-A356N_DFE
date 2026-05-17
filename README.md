@@ -1,5 +1,5 @@
-# Galaxy A35 Disable Force Encryption
-## Disable File Encryption (DFE) for s5e8835 (Exynos 1380)
+# Galaxy A35 Disable Forced Encryption
+## Disable File-based Encryption (DFE) for s5e8835 (Exynos 1380)
 This is a custom recovery-flashable script designed to disable file-based encryption (FBE v2) on Samsung device with the s5e8835 SoC. This fix "0 MB internal storage" issues, and removes /data encryption.
 
 ## Use with caution.
